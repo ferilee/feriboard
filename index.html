@@ -79,7 +79,8 @@
             MoreVertical,
             GraduationCap,
             Save,
-            Search
+            Search,
+            ExternalLink
         } from 'lucide-react';
 
         // --- Mock Data ---
@@ -240,7 +241,18 @@
 
             const ScheduleView = () => (
                 <div className="space-y-4 animate-fade-in">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Jadwal Mengajar Mingguan</h2>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-2">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Jadwal Mengajar Mingguan</h2>
+                        <a 
+                           href="https://ecoursemath.netlify.app/" 
+                           target="_blank" 
+                           rel="noreferrer"
+                           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20"
+                        >
+                            <BookOpen size={16} />
+                            Buka E-Course
+                        </a>
+                    </div>
                     <div className="space-y-3">
                         {MOCK_SCHEDULE.map((item) => (
                             <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-l-indigo-500 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
