@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Guru Matematika - Pak Feri</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Penting agar fitur toggle dark mode berfungsi
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & Babel Support via Import Map (Modern Way) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+        }
+    }
+    </script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Styles for Animations & Mobile Safe Area */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        /* Hide scrollbar for cleaner UI in sidebar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+    
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            LayoutDashboard, 
+            Calendar, 
+            BookOpen, 
+            CheckSquare, 
+            UserCheck, 
+            Settings, 
+            Moon, 
+            Sun, 
+            Menu, 
+            Plus, 
+            Minus,
+            Calculator,
+            MoreVertical,
+            GraduationCap,
+            Save,
+            Search
+        } from 'lucide-react';
+
+        // --- Mock Data ---
+
+        const MOCK_SCHEDULE = [
+            { id: 1, day: 'Senin', time: '07:00 - 08:30', class: 'X-A', subject: 'Logaritma & Eksponen', room: 'R. 101' },
+            { id: 2, day: 'Senin', time: '08:30 - 10:00', class: 'X-B', subject: 'Logaritma & Eksponen', room: 'R. 102' },
+            { id: 3, day: 'Selasa', time: '10:15 - 11:45', class: 'XI-IPA', subject: 'Trigonometri Lanjut', room: 'Lab Math' },
+            { id: 4, day: 'Rabu', time: '07:00 - 09:15', class: 'XII-IPA', subject: 'Integral Tentu', room: 'R. 305' },
+        ];
+
+        const MOCK_STUDENTS = [
+            { id: 1, name: 'Adit Pratama', class: 'X-A', status: 'Hadir', points: 85 },
+            { id: 2, name: 'Budi Santoso', class: 'X-A', status: 'Hadir', points: 78 },
+            { id: 3, name: 'Citra Kirana', class: 'X-A', status: 'Sakit', points: 92 },
+            { id: 4, name: 'Dewi Lestari', class: 'X-A', status: 'Hadir', points: 88 },
+            { id: 5, name: 'Eko Purnomo', class: 'X-A', status: 'Hadir', points: 75 },
+            { id: 6, name: 'Fani Rahmawati', class: 'X-A', status: 'Alpha', points: 90 },
+        ];
+
+        const MOCK_MATERIALS = [
+            { id: 1, title: 'Eksponen & Logaritma', class: 'Fase E (Kelas X)', progress: 100, status: 'Selesai' },
+            { id: 2, title: 'Barisan & Deret', class: 'Fase E (Kelas X)', progress: 40, status: 'Berjalan' },
+            { id: 3, title: 'Vektor & Operasinya', class: 'Fase E (Kelas X)', progress: 0, status: 'Belum' },
+        ];
+
+        // --- Components ---
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-5 transition-all duration-300 ${className}`}>
+                {children}
+            </div>
+        );
+
+        const Badge = ({ children, type = "primary" }) => {
+            const colors = {
+                primary: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+                success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+                warning: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+                danger: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+            };
+            return (
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[type]}`}>
+                    {children}
+                </span>
+            );
+        };
+
+        function MathTeacherDashboard() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [isDarkMode, setIsDarkMode] = useState(false);
+            const [students, setStudents] = useState(MOCK_STUDENTS);
+            const [journalEntry, setJournalEntry] = useState({ topic: '', notes: '' });
+            
+            // Toggle Dark Mode
+            useEffect(() => {
+                if (isDarkMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }, [isDarkMode]);
+
+            // Handle Status Change Direct (Negative Input Style)
+            const updateStatus = (id, newStatus) => {
+                setStudents(students.map(s => s.id === id ? { ...s, status: newStatus } : s));
+            };
+
+            // Handle Point System (Gamification)
+            const updatePoints = (id, delta) => {
+                setStudents(students.map(s => s.id === id ? { ...s, points: s.points + delta } : s));
+            };
+
+            // --- Views ---
+
+            const DashboardView = () => (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Selamat Pagi, Pak Feri! 👋</h2>
+                            <p className="text-slate-500 dark:text-slate-400">Siap mengajar Matematika hari ini?</p>
+                        </div>
+                        <div className="hidden md:block">
+                            <div className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/30 flex items-center gap-2">
+                                <Calendar size={16} /> 05 Januari 2026
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { label: 'Kelas Hari Ini', value: '4', icon: BookOpen, color: 'text-blue-500' },
+                            { label: 'Total Siswa', value: '142', icon: UserCheck, color: 'text-green-500' },
+                            { label: 'Jurnal Pending', value: '1', icon: CheckSquare, color: 'text-orange-500' },
+                            { label: 'Rata-rata Nilai', value: '82.5', icon: GraduationCap, color: 'text-purple-500' },
+                        ].map((stat, idx) => (
+                            <Card key={idx} className="flex flex-col items-center justify-center text-center py-6 hover:translate-y-[-2px]">
+                                <div className={`p-3 rounded-full bg-slate-50 dark:bg-slate-700 mb-3 ${stat.color}`}>
+                                    <stat.icon size={24} />
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{stat.value}</h3>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider mt-1">{stat.label}</p>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* Next Class Widget */}
+                    <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
+                        <div className="flex justify-between items-start z-10 relative">
+                            <div>
+                                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Kelas Selanjutnya (10 Menit Lagi)</span>
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mt-1">X-A — Logaritma Dasar</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Ruang 101 • 36 Siswa
+                                </p>
+                            </div>
+                            <button className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors" onClick={() => setActiveTab('attendance')}>
+                                <UserCheck size={20} />
+                            </button>
+                        </div>
+                        {/* Decorative Math Background */}
+                        <div className="absolute right-0 bottom-0 opacity-5 dark:opacity-10 pointer-events-none text-9xl font-serif -mr-4 -mb-8">
+                            ∫
+                        </div>
+                    </Card>
+                    
+                    {/* Recent Activity / Quick Actions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                            <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                <CheckSquare size={18} /> To-Do List
+                            </h3>
+                            <ul className="space-y-3">
+                                {[
+                                    { text: 'Koreksi UH Eksponen X-B', done: false },
+                                    { text: 'Input Nilai Sikap XI-IPA', done: true },
+                                    { text: 'Siapkan Materi Vektor', done: false },
+                                ].map((item, i) => (
+                                    <li key={i} className="flex items-center gap-3 text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg transition-colors">
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${item.done ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                                            {item.done && <Plus size={12} className="rotate-45" />}
+                                        </div>
+                                        <span className={`${item.done ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>{item.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </Card>
+                        
+                        <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-none">
+                            <h3 className="font-bold mb-2">Math Quote of the Day</h3>
+                            <p className="text-indigo-100 italic font-serif text-lg">"Mathematics is not about numbers, equations, computations, or algorithms: it is about understanding."</p>
+                            <p className="text-indigo-200 text-sm mt-2 text-right">— William Paul Thurston</p>
+                        </Card>
+                    </div>
+                </div>
+            );
+
+            const ScheduleView = () => (
+                <div className="space-y-4 animate-fade-in">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Jadwal Mengajar Mingguan</h2>
+                    <div className="space-y-3">
+                        {MOCK_SCHEDULE.map((item) => (
+                            <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-l-indigo-500 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-lg text-center min-w-[80px]">
+                                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase">{item.day}</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white mt-1">{item.time.split(' - ')[0]}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 dark:text-white text-lg">{item.subject}</h4>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2 mt-1">
+                                            <UserCheck size={14} /> Kelas {item.class} 
+                                            <span className="w-1 h-1 rounded-full bg-slate-300"></span> 
+                                            {item.room}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 rounded-lg transition-colors">
+                                    Lihat Materi
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            const AttendanceView = () => {
+                const statusConfig = {
+                    'Hadir': { code: 'H', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/60', active: 'bg-green-500 text-white shadow-md shadow-green-500/30' },
+                    'Sakit': { code: 'S', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/60', active: 'bg-yellow-500 text-white shadow-md shadow-yellow-500/30' },
+                    'Izin': { code: 'I', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60', active: 'bg-blue-500 text-white shadow-md shadow-blue-500/30' },
+                    'Alpha': { code: 'A', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60', active: 'bg-red-500 text-white shadow-md shadow-red-500/30' },
+                };
+
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-white">Absensi & Sikap Siswa</h2>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">Kelas X-A • Matematika Wajib</p>
+                            </div>
+                            <div className="flex gap-2 w-full md:w-auto">
+                                <button className="flex-1 md:flex-none bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">Rekap Bulanan</button>
+                                <button className="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-colors">Simpan Data</button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+                            {/* List Header */}
+                            <div className="grid grid-cols-12 gap-2 md:gap-4 p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                <div className="col-span-5 md:col-span-4">Nama Siswa</div>
+                                <div className="col-span-4 md:col-span-4 text-center">Status Kehadiran</div>
+                                <div className="col-span-3 md:col-span-4 text-center">Sikap</div>
+                            </div>
+
+                            {/* Student List */}
+                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                {students.map((student) => (
+                                    <div key={student.id} className="grid grid-cols-12 gap-2 md:gap-4 p-3 md:p-4 items-center hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                        
+                                        {/* Name & ID */}
+                                        <div className="col-span-5 md:col-span-4 flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                                {student.name.substring(0,2)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{student.name}</p>
+                                                <p className="text-xs text-slate-400 hidden md:block">NISN: 12345{student.id}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Attendance Buttons (Negative Input Style) */}
+                                        <div className="col-span-4 md:col-span-4 flex justify-center gap-1 md:gap-2">
+                                            {['Hadir', 'Sakit', 'Izin', 'Alpha'].map((statusType) => {
+                                                const isActive = student.status === statusType;
+                                                const config = statusConfig[statusType];
+                                                return (
+                                                    <button
+                                                        key={statusType}
+                                                        onClick={() => updateStatus(student.id, statusType)}
+                                                        className={`
+                                                            w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold transition-all
+                                                            ${isActive ? config.active : config.color}
+                                                            ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}
+                                                        `}
+                                                        title={statusType}
+                                                    >
+                                                        {config.code}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Points (Gamification) */}
+                                        <div className="col-span-3 md:col-span-4 flex items-center justify-center gap-1 md:gap-3">
+                                            <button 
+                                                onClick={() => updatePoints(student.id, -5)}
+                                                className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:border-red-800 transition-colors"
+                                            >
+                                                <Minus size={12} />
+                                            </button>
+                                            <div className="text-center w-8 md:w-12">
+                                                <span className={`text-sm font-bold ${student.points >= 90 ? 'text-green-500' : student.points < 75 ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                    {student.points}
+                                                </span>
+                                            </div>
+                                            <button 
+                                                onClick={() => updatePoints(student.id, 5)}
+                                                className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 flex items-center justify-center hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                                            >
+                                                <Plus size={12} />
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const JournalView = () => (
+                <div className="space-y-6 animate-fade-in">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">Jurnal Mengajar Digital</h2>
+                    
+                    {/* Input Form */}
+                    <Card>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Materi / Topik Bahasan</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Contoh: Pembuktian Sifat Logaritma..."
+                                    className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    value={journalEntry.topic}
+                                    onChange={(e) => setJournalEntry({...journalEntry, topic: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Catatan Kejadian / Refleksi</label>
+                                <textarea 
+                                    rows={4}
+                                    placeholder="Catat kendala siswa, siswa yang aktif, atau kejadian khusus..."
+                                    className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    value={journalEntry.notes}
+                                    onChange={(e) => setJournalEntry({...journalEntry, notes: e.target.value})}
+                                ></textarea>
+                            </div>
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                                <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap">
+                                    <Calculator size={16} /> Insert Formula
+                                </button>
+                                <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap">
+                                    <CheckSquare size={16} /> Quiz Generator
+                                </button>
+                            </div>
+                            <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                                <Save size={18} /> Simpan Jurnal
+                            </button>
+                        </div>
+                    </Card>
+
+                    {/* History */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Riwayat Jurnal</h3>
+                        <Card className="flex gap-4">
+                            <div className="flex flex-col items-center">
+                                <div className="w-2 h-2 rounded-full bg-slate-300 mb-1"></div>
+                                <div className="w-0.5 h-full bg-slate-200 dark:bg-slate-700"></div>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-400">Kemarin, 08:30 WIB • X-B</p>
+                                <h4 className="font-bold text-slate-800 dark:text-white">Pengenalan Grafik Fungsi Eksponen</h4>
+                                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">Siswa cukup antusias, namun 5 siswa masih bingung membedakan grafik pertumbuhan vs peluruhan.</p>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+
+            const MaterialView = () => (
+                <div className="space-y-6 animate-fade-in">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Capaian Pembelajaran (CP)</h2>
+                        <button className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
+                            <Search size={18} className="text-slate-600 dark:text-slate-300" />
+                        </button>
+                    </div>
+
+                    <div className="grid gap-4">
+                        {MOCK_MATERIALS.map((mat) => (
+                            <Card key={mat.id} className="group cursor-pointer hover:border-blue-500 dark:hover:border-blue-500">
+                                <div className="flex justify-between items-start mb-2">
+                                    <Badge type={mat.status === 'Selesai' ? 'success' : mat.status === 'Berjalan' ? 'primary' : 'warning'}>
+                                        {mat.status}
+                                    </Badge>
+                                    <span className="text-xs font-bold text-slate-400">{mat.class}</span>
+                                </div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">{mat.title}</h3>
+                                
+                                {/* Progress Bar */}
+                                <div className="mt-4">
+                                    <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                        <span>Progress</span>
+                                        <span>{mat.progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                                        <div 
+                                            className="bg-blue-500 h-full rounded-full transition-all duration-1000" 
+                                            style={{ width: `${mat.progress}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            );
+
+            // --- Layout Wrappers ---
+
+            const SidebarItem = ({ id, label, icon: Icon }) => (
+                <button
+                    onClick={() => setActiveTab(id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium
+                        ${activeTab === id 
+                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                        }
+                    `}
+                >
+                    <Icon size={20} />
+                    <span>{label}</span>
+                </button>
+            );
+
+            const BottomNavItem = ({ id, label, icon: Icon }) => (
+                <button 
+                    onClick={() => setActiveTab(id)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors
+                        ${activeTab === id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}
+                    `}
+                >
+                    <Icon size={24} className={activeTab === id ? 'fill-current opacity-20' : ''} strokeWidth={activeTab === id ? 2.5 : 2} />
+                    <span className="text-[10px] font-medium mt-1">{label}</span>
+                </button>
+            );
+
+            return (
+                <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300 font-sans ${isDarkMode ? 'dark' : ''}`}>
+                    
+                    {/* Desktop Sidebar */}
+                    <aside className="hidden md:flex flex-col w-72 h-screen fixed left-0 top-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-50">
+                        <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-700">
+                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-600/20">
+                                F
+                            </div>
+                            <div>
+                                <h1 className="font-bold text-slate-800 dark:text-white leading-tight">Pak Feri</h1>
+                                <p className="text-xs text-slate-500">Guru Matematika</p>
+                            </div>
+                        </div>
+
+                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+                            <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
+                            <SidebarItem id="schedule" label="Jadwal Mengajar" icon={Calendar} />
+                            <SidebarItem id="attendance" label="Absensi & Sikap" icon={UserCheck} />
+                            <SidebarItem id="journal" label="Jurnal Mengajar" icon={BookOpen} />
+                            <SidebarItem id="materials" label="Materi & CP" icon={GraduationCap} />
+                        </nav>
+
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-700">
+                            <button 
+                                onClick={() => setIsDarkMode(!isDarkMode)}
+                                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                                <span className="text-sm font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* Main Content Area */}
+                    <main className="md:ml-72 min-h-screen pb-24 md:pb-8">
+                        
+                        {/* Mobile Header */}
+                        <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold shadow-sm">F</div>
+                                <span className="font-bold text-slate-800 dark:text-white">MathTeacher</span>
+                            </div>
+                            <button 
+                                onClick={() => setIsDarkMode(!isDarkMode)}
+                                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                            >
+                                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                            </button>
+                        </header>
+
+                        {/* Content Container */}
+                        <div className="p-4 md:p-8 max-w-5xl mx-auto">
+                            {activeTab === 'dashboard' && <DashboardView />}
+                            {activeTab === 'schedule' && <ScheduleView />}
+                            {activeTab === 'attendance' && <AttendanceView />}
+                            {activeTab === 'journal' && <JournalView />}
+                            {activeTab === 'materials' && <MaterialView />}
+                        </div>
+
+                    </main>
+
+                    {/* Mobile Bottom Navigation */}
+                    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-6 py-2 pb-safe z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                        <BottomNavItem id="dashboard" label="Home" icon={LayoutDashboard} />
+                        <BottomNavItem id="schedule" label="Jadwal" icon={Calendar} />
+                        
+                        {/* Floating Action Button (FAB) Replacement for center item */}
+                        <div className="relative -top-6">
+                            <button 
+                                onClick={() => setActiveTab('attendance')}
+                                className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 hover:scale-105 transition-transform"
+                            >
+                                <Plus size={28} />
+                            </button>
+                        </div>
+
+                        <BottomNavItem id="journal" label="Jurnal" icon={BookOpen} />
+                        <BottomNavItem id="materials" label="Materi" icon={GraduationCap} />
+                    </nav>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<MathTeacherDashboard />);
+    </script>
+</body>
+</html>
