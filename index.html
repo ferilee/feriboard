@@ -112,23 +112,24 @@
             // =========================================================================
             
             // KONFIGURASI 1: ABSENSI KELAS
+            // Pastikan menambahkan ENTRY ID baru untuk data Sikap di Google Form Absensi
             const CONFIG_ABSENSI = {
                 URL: "https://docs.google.com/forms/d/e/1FAIpQLSek739s7ANqhZjTcvLUwyVSZJfXSIAEnDPoIinTBEXnss3Q8w/formResponse", 
                 ENTRIES: {
-                    TIMESTAMP: "entry.127275821", 
-                    CLASS: "entry.940492025",     
-                    ATTENDANCE_DATA: "entry.1736672467", 
-                    ATTITUDE_DATA: "entry.192044734"     
+                    TIMESTAMP: "entry.127275821", // ID kolom Waktu
+                    CLASS: "entry.940492025",     // ID kolom Kelas
+                    ATTENDANCE_DATA: "entry.1736672467", // ID kolom Data Absensi (JSON)
+                    ATTITUDE_DATA: "entry.192044734"     // ID kolom Data Sikap (JSON)
                 }
             };
 
-            // KONFIGURASI 2: JURNAL IBADAH
+            // KONFIGURASI 2: JURNAL IBADAH (SUDAH DIPERBAIKI)
             const CONFIG_JURNAL = {
-                URL: "https://docs.google.com/forms/u/0/d/e/YOUR_JURNAL_FORM_ID/formResponse",
+                URL: "https://docs.google.com/forms/d/e/1FAIpQLSeJjkt18zigfDAfkViKCKjUfoQgcSZJf2HbX0DCPbsiXumBkw/formResponse",
                 ENTRIES: {
-                    TIMESTAMP: "entry.44444", 
-                    PRAYER: "entry.55555",    
-                    DATA: "entry.66666"       
+                    TIMESTAMP: "entry.895617080", 
+                    PRAYER: "entry.1973518500",    
+                    DATA: "entry.973790157"       
                 }
             };
             // =========================================================================
