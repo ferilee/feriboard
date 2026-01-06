@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Penting agar fitur toggle dark mode berfungsi
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -21,7 +21,7 @@
         }
     </script>
 
-    <!-- React & Babel Support via Import Map (Modern Way) -->
+    <!-- React & Babel Support -->
     <script type="importmap">
     {
         "imports": {
@@ -34,26 +34,14 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Custom Styles for Animations & Mobile Safe Area */
-        .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in {
-            animation: fade-in 0.3s ease-out forwards;
-        }
-        
-        /* Hide scrollbar for cleaner UI in sidebar */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
@@ -64,41 +52,19 @@
         import React, { useState, useEffect } from 'react';
         import { createRoot } from 'react-dom/client';
         import { 
-            LayoutDashboard, 
-            Calendar, 
-            BookOpen, 
-            CheckSquare, 
-            UserCheck, 
-            Settings, 
-            Moon, 
-            Sun, 
-            Menu, 
-            Plus, 
-            Minus,
-            Calculator,
-            MoreVertical,
-            GraduationCap,
-            Save,
-            Search,
-            ExternalLink
+            LayoutDashboard, Calendar, BookOpen, CheckSquare, UserCheck, 
+            Settings, Moon, Sun, Menu, Plus, Minus, Calculator, 
+            MoreVertical, GraduationCap, Save, Search, ExternalLink, Heart,
+            Clock, RefreshCw, Filter, ChevronDown, Send, CheckCircle, AlertCircle,
+            BarChart3, TrendingUp, CalendarDays, UserX, UserMinus, Activity
         } from 'lucide-react';
 
-        // --- Mock Data ---
-
+        // --- Mock Data Lainnya (Tetap) ---
         const MOCK_SCHEDULE = [
             { id: 1, day: 'Senin', time: '07:00 - 08:30', class: 'X-A', subject: 'Logaritma & Eksponen', room: 'R. 101' },
             { id: 2, day: 'Senin', time: '08:30 - 10:00', class: 'X-B', subject: 'Logaritma & Eksponen', room: 'R. 102' },
             { id: 3, day: 'Selasa', time: '10:15 - 11:45', class: 'XI-IPA', subject: 'Trigonometri Lanjut', room: 'Lab Math' },
             { id: 4, day: 'Rabu', time: '07:00 - 09:15', class: 'XII-IPA', subject: 'Integral Tentu', room: 'R. 305' },
-        ];
-
-        const MOCK_STUDENTS = [
-            { id: 1, name: 'Adit Pratama', class: 'X-A', status: 'Hadir', points: 85 },
-            { id: 2, name: 'Budi Santoso', class: 'X-A', status: 'Hadir', points: 78 },
-            { id: 3, name: 'Citra Kirana', class: 'X-A', status: 'Sakit', points: 92 },
-            { id: 4, name: 'Dewi Lestari', class: 'X-A', status: 'Hadir', points: 88 },
-            { id: 5, name: 'Eko Purnomo', class: 'X-A', status: 'Hadir', points: 75 },
-            { id: 6, name: 'Fani Rahmawati', class: 'X-A', status: 'Alpha', points: 90 },
         ];
 
         const MOCK_MATERIALS = [
@@ -108,7 +74,6 @@
         ];
 
         // --- Components ---
-
         const Card = ({ children, className = "" }) => (
             <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 p-5 transition-all duration-300 ${className}`}>
                 {children}
@@ -129,13 +94,81 @@
             );
         };
 
+        const StatCard = ({ label, value, icon: Icon, colorClass }) => (
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 min-w-[120px] flex-1">
+                <div className={`p-2 rounded-lg ${colorClass} bg-opacity-10 shrink-0`}>
+                    <Icon size={18} className={colorClass.replace('bg-', 'text-')} />
+                </div>
+                <div className="min-w-0">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide truncate">{label}</p>
+                    <h4 className="text-xl font-bold text-slate-800 dark:text-white">{value}</h4>
+                </div>
+            </div>
+        );
+
         function MathTeacherDashboard() {
+            // =========================================================================
+            // CONFIG GOOGLE FORM (Update Pak Feri)
+            // =========================================================================
+            
+            // KONFIGURASI 1: ABSENSI KELAS
+            const CONFIG_ABSENSI = {
+                URL: "https://docs.google.com/forms/d/e/1FAIpQLSek739s7ANqhZjTcvLUwyVSZJfXSIAEnDPoIinTBEXnss3Q8w/formResponse", 
+                ENTRIES: {
+                    TIMESTAMP: "entry.127275821", 
+                    CLASS: "entry.940492025",     
+                    ATTENDANCE_DATA: "entry.1736672467", 
+                    ATTITUDE_DATA: "entry.192044734"     
+                }
+            };
+
+            // KONFIGURASI 2: JURNAL IBADAH
+            const CONFIG_JURNAL = {
+                URL: "https://docs.google.com/forms/u/0/d/e/YOUR_JURNAL_FORM_ID/formResponse",
+                ENTRIES: {
+                    TIMESTAMP: "entry.44444", 
+                    PRAYER: "entry.55555",    
+                    DATA: "entry.66666"       
+                }
+            };
+            // =========================================================================
+
             const [activeTab, setActiveTab] = useState('dashboard');
             const [isDarkMode, setIsDarkMode] = useState(false);
-            const [students, setStudents] = useState(MOCK_STUDENTS);
-            const [journalEntry, setJournalEntry] = useState({ topic: '', notes: '' });
             
-            // Toggle Dark Mode
+            // Helper Time
+            const getCurrentDateTime = () => {
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                return now.toISOString().slice(0, 16);
+            };
+
+            // State Jurnal Mengajar (Lengkap)
+            const [journalData, setJournalData] = useState({
+                timestamp: getCurrentDateTime(),
+                className: '',
+                subject: 'Matematika',
+                hours: '',
+                topic: '',
+                activities: '',
+                reflections: ''
+            });
+
+            const [attendanceType, setAttendanceType] = useState('class'); // 'class' or 'prayer'
+            
+            // State Data Siswa
+            const [students, setStudents] = useState([]);
+            const [isLoading, setIsLoading] = useState(true);
+            const [selectedClass, setSelectedClass] = useState('Semua Kelas');
+            
+            // State Jurnal Ibadah
+            const [selectedPrayer, setSelectedPrayer] = useState('dhuha'); 
+            
+            // State Pengiriman
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            
+            const [attendanceTimestamp, setAttendanceTimestamp] = useState(getCurrentDateTime());
+
             useEffect(() => {
                 if (isDarkMode) {
                     document.documentElement.classList.add('dark');
@@ -144,14 +177,108 @@
                 }
             }, [isDarkMode]);
 
-            // Handle Status Change Direct (Negative Input Style)
+            useEffect(() => {
+                const fetchStudents = async () => {
+                    try {
+                        setIsLoading(true);
+                        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRNxfl64ybd5HEX-Ln3ubR8C-SxModDRkPVuRpShlUDX2UCRgKib2cIqXtsUPT4d0rJY_gkaCQVOTSb/pub?gid=1562678039&single=true&output=csv';
+                        const response = await fetch(csvUrl);
+                        const text = await response.text();
+                        const rows = text.split('\n').filter(row => row.trim() !== '');
+                        
+                        const parsedStudents = rows.slice(1).map((row, index) => {
+                            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(col => col.replace(/^"|"$/g, '').trim());
+                            return {
+                                id: index + 1,
+                                name: cols[0] || 'Siswa Tanpa Nama',
+                                class: cols[1] || 'X',
+                                major: cols[2] || 'Umum',
+                                status: 'Hadir',
+                                points: 75,
+                                dhuha: 'Tidak Sholat',
+                                dhuhur: 'Tidak Sholat',
+                                ashar: 'Tidak Sholat'
+                            };
+                        });
+                        setStudents(parsedStudents);
+                    } catch (error) {
+                        console.error("Gagal mengambil data:", error);
+                        setStudents([{ id: 1, name: "Gagal memuat data", class: "Error", major: "Cek Koneksi", status: "Hadir", points: 0, dhuha: 'Tidak Sholat', dhuhur: 'Tidak Sholat', ashar: 'Tidak Sholat' }]);
+                    } finally {
+                        setIsLoading(false);
+                    }
+                };
+                fetchStudents();
+            }, []);
+
             const updateStatus = (id, newStatus) => {
                 setStudents(students.map(s => s.id === id ? { ...s, status: newStatus } : s));
             };
 
-            // Handle Point System (Gamification)
             const updatePoints = (id, delta) => {
                 setStudents(students.map(s => s.id === id ? { ...s, points: s.points + delta } : s));
+            };
+
+            const cyclePrayerStatus = (id, prayerName) => {
+                setStudents(students.map(s => {
+                    if (s.id === id) {
+                        const statuses = ['Tidak Sholat', 'Sholat', 'Berhalangan'];
+                        const currentStatus = s[prayerName];
+                        const nextIndex = (statuses.indexOf(currentStatus) + 1) % statuses.length;
+                        return { ...s, [prayerName]: statuses[nextIndex] };
+                    }
+                    return s;
+                }));
+            };
+
+            // --- FUNGSI KIRIM DATA (MULTI-PAYLOAD) ---
+            const handleSaveToGoogleForm = async (filteredStudents) => {
+                setIsSubmitting(true);
+                let targetUrl = "";
+                let formData = new FormData();
+                let config;
+
+                if (attendanceType === 'class') {
+                    // --- MODE ABSENSI KELAS ---
+                    config = CONFIG_ABSENSI;
+                    targetUrl = config.URL;
+                    
+                    const attendancePayload = filteredStudents.map(s => ({ n: s.name, s: s.status }));
+                    const attitudePayload = filteredStudents.map(s => ({ n: s.name, p: s.points }));
+
+                    formData.append(config.ENTRIES.TIMESTAMP, attendanceTimestamp);
+                    formData.append(config.ENTRIES.CLASS, selectedClass);
+                    formData.append(config.ENTRIES.ATTENDANCE_DATA, JSON.stringify(attendancePayload));
+                    
+                    if (config.ENTRIES.ATTITUDE_DATA !== "entry.999999999") {
+                        formData.append(config.ENTRIES.ATTITUDE_DATA, JSON.stringify(attitudePayload));
+                    }
+
+                } else {
+                    // --- MODE JURNAL IBADAH ---
+                    config = CONFIG_JURNAL;
+                    if (config.URL.includes("YOUR_JURNAL_FORM_ID")) {
+                        alert("Mohon isi konfigurasi Form Jurnal Ibadah di kode terlebih dahulu.");
+                        setIsSubmitting(false);
+                        return;
+                    }
+                    targetUrl = config.URL;
+                    const dataPayload = filteredStudents.map(s => ({ n: s.name, c: s.class, s: s[selectedPrayer] }));
+                    
+                    formData.append(config.ENTRIES.TIMESTAMP, attendanceTimestamp);
+                    formData.append(config.ENTRIES.PRAYER, selectedPrayer);
+                    formData.append(config.ENTRIES.DATA, JSON.stringify(dataPayload));
+                }
+
+                try {
+                    await fetch(targetUrl, { method: 'POST', mode: 'no-cors', body: formData });
+                    alert(`Data ${attendanceType === 'class' ? 'Absensi & Sikap' : 'Jurnal Ibadah'} berhasil dikirim!`);
+                } catch (error) {
+                    console.error("Error sending data:", error);
+                    alert("Gagal mengirim data. Cek koneksi internet Anda.");
+                } finally {
+                    setIsSubmitting(false);
+                }
             };
 
             // --- Views ---
@@ -165,16 +292,15 @@
                         </div>
                         <div className="hidden md:block">
                             <div className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/30 flex items-center gap-2">
-                                <Calendar size={16} /> 05 Januari 2026
+                                <Calendar size={16} /> {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'})}
                             </div>
                         </div>
                     </div>
 
-                    {/* Stats Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
                             { label: 'Kelas Hari Ini', value: '4', icon: BookOpen, color: 'text-blue-500' },
-                            { label: 'Total Siswa', value: '142', icon: UserCheck, color: 'text-green-500' },
+                            { label: 'Total Siswa', value: isLoading ? '...' : students.length, icon: UserCheck, color: 'text-green-500' },
                             { label: 'Jurnal Pending', value: '1', icon: CheckSquare, color: 'text-orange-500' },
                             { label: 'Rata-rata Nilai', value: '82.5', icon: GraduationCap, color: 'text-purple-500' },
                         ].map((stat, idx) => (
@@ -188,11 +314,10 @@
                         ))}
                     </div>
 
-                    {/* Next Class Widget */}
                     <Card className="relative overflow-hidden border-l-4 border-l-blue-500">
                         <div className="flex justify-between items-start z-10 relative">
                             <div>
-                                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Kelas Selanjutnya (10 Menit Lagi)</span>
+                                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Kelas Selanjutnya</span>
                                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mt-1">X-A — Logaritma Dasar</h3>
                                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 flex items-center gap-1">
                                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Ruang 101 • 36 Siswa
@@ -202,13 +327,9 @@
                                 <UserCheck size={20} />
                             </button>
                         </div>
-                        {/* Decorative Math Background */}
-                        <div className="absolute right-0 bottom-0 opacity-5 dark:opacity-10 pointer-events-none text-9xl font-serif -mr-4 -mb-8">
-                            ∫
-                        </div>
+                        <div className="absolute right-0 bottom-0 opacity-5 dark:opacity-10 pointer-events-none text-9xl font-serif -mr-4 -mb-8">∫</div>
                     </Card>
                     
-                    {/* Recent Activity / Quick Actions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <Card>
                             <h3 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
@@ -229,52 +350,11 @@
                                 ))}
                             </ul>
                         </Card>
-                        
                         <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-none">
                             <h3 className="font-bold mb-2">Math Quote of the Day</h3>
                             <p className="text-indigo-100 italic font-serif text-lg">"Mathematics is not about numbers, equations, computations, or algorithms: it is about understanding."</p>
                             <p className="text-indigo-200 text-sm mt-2 text-right">— William Paul Thurston</p>
                         </Card>
-                    </div>
-                </div>
-            );
-
-            const ScheduleView = () => (
-                <div className="space-y-4 animate-fade-in">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-2">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Jadwal Mengajar Mingguan</h2>
-                        <a 
-                           href="https://ecoursemath.netlify.app/" 
-                           target="_blank" 
-                           rel="noreferrer"
-                           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20"
-                        >
-                            <BookOpen size={16} />
-                            Buka E-Course
-                        </a>
-                    </div>
-                    <div className="space-y-3">
-                        {MOCK_SCHEDULE.map((item) => (
-                            <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-l-indigo-500 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-lg text-center min-w-[80px]">
-                                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase">{item.day}</p>
-                                        <p className="text-sm font-bold text-slate-800 dark:text-white mt-1">{item.time.split(' - ')[0]}</p>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white text-lg">{item.subject}</h4>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2 mt-1">
-                                            <UserCheck size={14} /> Kelas {item.class} 
-                                            <span className="w-1 h-1 rounded-full bg-slate-300"></span> 
-                                            {item.room}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 rounded-lg transition-colors">
-                                    Lihat Materi
-                                </button>
-                            </div>
-                        ))}
                     </div>
                 </div>
             );
@@ -287,273 +367,396 @@
                     'Alpha': { code: 'A', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60', active: 'bg-red-500 text-white shadow-md shadow-red-500/30' },
                 };
 
+                const prayerConfig = {
+                    'Sholat': { color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },
+                    'Tidak Sholat': { color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
+                    'Berhalangan': { color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' },
+                };
+
+                // Logic Filter
+                const uniqueClasses = ['Semua Kelas', ...new Set(students.map(s => s.class))].sort();
+                
+                let filteredStudents = students;
+                if (attendanceType === 'class') {
+                    filteredStudents = selectedClass === 'Semua Kelas' ? students : students.filter(s => s.class === selectedClass);
+                } else {
+                    filteredStudents = students.filter(s => s.class && s.class.toUpperCase().includes('XI RPL'));
+                }
+
+                // --- LIVE STATISTICS LOGIC ---
+                const stats = {
+                    hadir: filteredStudents.filter(s => s.status === 'Hadir').length,
+                    sakit: filteredStudents.filter(s => s.status === 'Sakit').length,
+                    izin: filteredStudents.filter(s => s.status === 'Izin').length,
+                    alpha: filteredStudents.filter(s => s.status === 'Alpha').length,
+                };
+
                 return (
                     <div className="space-y-6 animate-fade-in">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-800 dark:text-white">Absensi & Sikap Siswa</h2>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Kelas X-A • Matematika Wajib</p>
+                        {/* Header & Controls */}
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">Absensi & Sikap Siswa</h2>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                        <ExternalLink size={12} /> Data Sync: Google Sheets
+                                    </p>
+                                </div>
+                                <div className="flex gap-2 w-full md:w-auto">
+                                    <div className="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
+                                        <button onClick={() => setAttendanceType('class')} className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${attendanceType === 'class' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}>Absensi Kelas</button>
+                                        <button onClick={() => setAttendanceType('prayer')} className={`px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${attendanceType === 'prayer' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 dark:text-slate-400'}`}><Heart size={14} /> Jurnal Ibadah</button>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleSaveToGoogleForm(filteredStudents)}
+                                        disabled={isSubmitting}
+                                        className="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <RefreshCw size={16} className="animate-spin" />
+                                                Mengirim...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send size={16} />
+                                                Simpan Data
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex gap-2 w-full md:w-auto">
-                                <button className="flex-1 md:flex-none bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">Rekap Bulanan</button>
-                                <button className="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-colors">Simpan Data</button>
-                            </div>
+
+                            {/* Timestamp Input */}
+                            <Card className="py-3 px-4 flex flex-col md:flex-row items-center justify-between gap-3 bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/50">
+                                <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
+                                    <Clock size={18} />
+                                    <span className="font-semibold text-sm">Waktu Pengisian:</span>
+                                </div>
+                                <input 
+                                    type="datetime-local" 
+                                    value={attendanceTimestamp}
+                                    onChange={(e) => setAttendanceTimestamp(e.target.value)}
+                                    className="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-auto"
+                                />
+                            </Card>
+
+                            {/* Filter Dropdown */}
+                            <Card className="py-3 px-4 flex flex-col md:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                {attendanceType === 'class' ? (
+                                    <>
+                                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                            <Filter size={18} />
+                                            <span className="font-semibold text-sm">Pilih Kelas:</span>
+                                        </div>
+                                        <select 
+                                            value={selectedClass}
+                                            onChange={(e) => setSelectedClass(e.target.value)}
+                                            className="border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-auto"
+                                        >
+                                            {uniqueClasses.map(cls => (
+                                                <option key={cls} value={cls}>{cls}</option>
+                                            ))}
+                                        </select>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                            <Heart size={18} />
+                                            <span className="font-semibold text-sm">Pilih Sholat:</span>
+                                        </div>
+                                        <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+                                            {['dhuha', 'dhuhur', 'ashar'].map((prayer) => (
+                                                <button
+                                                    key={prayer}
+                                                    onClick={() => setSelectedPrayer(prayer)}
+                                                    className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-all ${selectedPrayer === prayer ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                                                >
+                                                    {prayer}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </Card>
+
+                            {/* LIVE STATISTICS CARDS (ONLY IN CLASS MODE) */}
+                            {attendanceType === 'class' && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in">
+                                    <StatCard 
+                                        label="Hadir" 
+                                        value={stats.hadir} 
+                                        icon={CheckCircle} 
+                                        colorClass="bg-green-500 text-white" 
+                                    />
+                                    <StatCard 
+                                        label="Sakit" 
+                                        value={stats.sakit} 
+                                        icon={Activity} 
+                                        colorClass="bg-yellow-500 text-white" 
+                                    />
+                                    <StatCard 
+                                        label="Izin" 
+                                        value={stats.izin} 
+                                        icon={UserMinus} 
+                                        colorClass="bg-blue-500 text-white" 
+                                    />
+                                    <StatCard 
+                                        label="Alpha" 
+                                        value={stats.alpha} 
+                                        icon={UserX} 
+                                        colorClass="bg-red-500 text-white" 
+                                    />
+                                </div>
+                            )}
                         </div>
 
+                        {/* Student List */}
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
                             {/* List Header */}
                             <div className="grid grid-cols-12 gap-2 md:gap-4 p-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                <div className="col-span-5 md:col-span-4">Nama Siswa</div>
-                                <div className="col-span-4 md:col-span-4 text-center">Status Kehadiran</div>
-                                <div className="col-span-3 md:col-span-4 text-center">Sikap</div>
+                                <div className="col-span-6 md:col-span-8">Nama Siswa</div>
+                                {attendanceType === 'class' ? (
+                                    <>
+                                        <div className="col-span-3 md:col-span-2 text-center">Kehadiran</div>
+                                        <div className="col-span-3 md:col-span-2 text-center">Sikap</div>
+                                    </>
+                                ) : (
+                                    <div className="col-span-6 md:col-span-4 text-center capitalize">Status {selectedPrayer}</div>
+                                )}
                             </div>
 
-                            {/* Student List */}
-                            <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                                {students.map((student) => (
-                                    <div key={student.id} className="grid grid-cols-12 gap-2 md:gap-4 p-3 md:p-4 items-center hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                                        
-                                        {/* Name & ID */}
-                                        <div className="col-span-5 md:col-span-4 flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                                                {student.name.substring(0,2)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{student.name}</p>
-                                                <p className="text-xs text-slate-400 hidden md:block">NISN: 12345{student.id}</p>
-                                            </div>
-                                        </div>
+                            {/* Loading State */}
+                            {isLoading ? (
+                                <div className="p-8 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center gap-2">
+                                    <RefreshCw className="animate-spin" />
+                                    <p>Mengambil data siswa dari Spreadsheet...</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                    {filteredStudents.length > 0 ? (
+                                        filteredStudents.map((student) => (
+                                            <div key={student.id} className="grid grid-cols-12 gap-2 md:gap-4 p-3 md:p-4 items-center hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                                
+                                                {/* Name & Info */}
+                                                <div className="col-span-6 md:col-span-8 flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                                        {student.name.substring(0,2)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-slate-800 dark:text-white truncate" title={student.name}>{student.name}</p>
+                                                        <p className="text-[10px] text-slate-400 uppercase tracking-wide truncate">
+                                                            {student.class} • {student.major}
+                                                        </p>
+                                                    </div>
+                                                </div>
 
-                                        {/* Attendance Buttons (Negative Input Style) */}
-                                        <div className="col-span-4 md:col-span-4 flex justify-center gap-1 md:gap-2">
-                                            {['Hadir', 'Sakit', 'Izin', 'Alpha'].map((statusType) => {
-                                                const isActive = student.status === statusType;
-                                                const config = statusConfig[statusType];
-                                                return (
-                                                    <button
-                                                        key={statusType}
-                                                        onClick={() => updateStatus(student.id, statusType)}
-                                                        className={`
-                                                            w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center text-[10px] md:text-xs font-bold transition-all
-                                                            ${isActive ? config.active : config.color}
-                                                            ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}
-                                                        `}
-                                                        title={statusType}
-                                                    >
-                                                        {config.code}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Points (Gamification) */}
-                                        <div className="col-span-3 md:col-span-4 flex items-center justify-center gap-1 md:gap-3">
-                                            <button 
-                                                onClick={() => updatePoints(student.id, -5)}
-                                                className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:border-red-800 transition-colors"
-                                            >
-                                                <Minus size={12} />
-                                            </button>
-                                            <div className="text-center w-8 md:w-12">
-                                                <span className={`text-sm font-bold ${student.points >= 90 ? 'text-green-500' : student.points < 75 ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                                                    {student.points}
-                                                </span>
+                                                {attendanceType === 'class' ? (
+                                                    <>
+                                                        <div className="col-span-3 md:col-span-2 flex justify-center gap-1">
+                                                            {['Hadir', 'Sakit', 'Izin', 'Alpha'].map((statusType) => {
+                                                                const isActive = student.status === statusType;
+                                                                const config = statusConfig[statusType];
+                                                                return (
+                                                                    <button key={statusType} onClick={() => updateStatus(student.id, statusType)} className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${isActive ? config.active : config.color} ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}`} title={statusType}>{config.code}</button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                        <div className="col-span-3 md:col-span-2 flex items-center justify-center gap-2">
+                                                            <button onClick={() => updatePoints(student.id, -5)} className="w-7 h-7 rounded-full border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:border-red-800 transition-colors"><Minus size={12} /></button>
+                                                            <div className="text-center w-8"><span className={`text-sm font-bold ${student.points >= 90 ? 'text-green-500' : student.points < 75 ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>{student.points}</span></div>
+                                                            <button onClick={() => updatePoints(student.id, 5)} className="w-7 h-7 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 flex items-center justify-center hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"><Plus size={12} /></button>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="col-span-6 md:col-span-4 flex justify-center">
+                                                        {(() => {
+                                                            const status = student[selectedPrayer];
+                                                            const colorClass = prayerConfig[status].color;
+                                                            return (
+                                                                <button onClick={() => cyclePrayerStatus(student.id, selectedPrayer)} className={`px-4 py-2 rounded-lg text-xs font-bold w-full max-w-[120px] transition-all ${colorClass}`}>
+                                                                    {status}
+                                                                </button>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <button 
-                                                onClick={() => updatePoints(student.id, 5)}
-                                                className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 flex items-center justify-center hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
-                                            >
-                                                <Plus size={12} />
-                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                                            <p>{attendanceType === 'prayer' ? 'Tidak ada siswa XI RPL.' : `Tidak ada siswa di kelas ${selectedClass}`}</p>
                                         </div>
-
-                                    </div>
-                                ))}
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
             };
 
-            const JournalView = () => (
-                <div className="space-y-6 animate-fade-in">
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white">Jurnal Mengajar Digital</h2>
-                    
-                    {/* Input Form */}
-                    <Card>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Materi / Topik Bahasan</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Contoh: Pembuktian Sifat Logaritma..."
-                                    className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    value={journalEntry.topic}
-                                    onChange={(e) => setJournalEntry({...journalEntry, topic: e.target.value})}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Catatan Kejadian / Refleksi</label>
-                                <textarea 
-                                    rows={4}
-                                    placeholder="Catat kendala siswa, siswa yang aktif, atau kejadian khusus..."
-                                    className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    value={journalEntry.notes}
-                                    onChange={(e) => setJournalEntry({...journalEntry, notes: e.target.value})}
-                                ></textarea>
-                            </div>
-                            <div className="flex gap-2 overflow-x-auto pb-2">
-                                <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap">
-                                    <Calculator size={16} /> Insert Formula
-                                </button>
-                                <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap">
-                                    <CheckSquare size={16} /> Quiz Generator
-                                </button>
-                            </div>
-                            <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                                <Save size={18} /> Simpan Jurnal
-                            </button>
-                        </div>
-                    </Card>
-
-                    {/* History */}
+            const ScheduleView = () => (
+                <div className="space-y-4 animate-fade-in">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-2">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Jadwal Mengajar Mingguan</h2>
+                        <a href="https://ecoursemath.netlify.app/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20"><BookOpen size={16} /> Buka E-Course</a>
+                    </div>
                     <div className="space-y-3">
-                        <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Riwayat Jurnal</h3>
-                        <Card className="flex gap-4">
-                            <div className="flex flex-col items-center">
-                                <div className="w-2 h-2 rounded-full bg-slate-300 mb-1"></div>
-                                <div className="w-0.5 h-full bg-slate-200 dark:bg-slate-700"></div>
+                        {MOCK_SCHEDULE.map((item) => (
+                            <div key={item.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 border-l-indigo-500 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-lg text-center min-w-[80px]">
+                                        <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase">{item.day}</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white mt-1">{item.time.split(' - ')[0]}</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 dark:text-white text-lg">{item.subject}</h4>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2 mt-1"><UserCheck size={14} /> Kelas {item.class} <span className="w-1 h-1 rounded-full bg-slate-300"></span> {item.room}</p>
+                                    </div>
+                                </div>
+                                <button className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50 rounded-lg transition-colors">Lihat Materi</button>
                             </div>
-                            <div>
-                                <p className="text-xs text-slate-400">Kemarin, 08:30 WIB • X-B</p>
-                                <h4 className="font-bold text-slate-800 dark:text-white">Pengenalan Grafik Fungsi Eksponen</h4>
-                                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">Siswa cukup antusias, namun 5 siswa masih bingung membedakan grafik pertumbuhan vs peluruhan.</p>
-                            </div>
-                        </Card>
+                        ))}
                     </div>
                 </div>
             );
+            
+            const JournalView = () => {
+                const uniqueClasses = ['Pilih Kelas', ...new Set(students.map(s => s.class))].sort();
+
+                return (
+                    <div className="space-y-6 animate-fade-in">
+                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Jurnal Mengajar Digital</h2>
+                        <Card>
+                            <div className="space-y-4">
+                                {/* Row 1: Waktu & Kelas */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Waktu Pengisian</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            value={journalData.timestamp}
+                                            onChange={(e) => setJournalData({...journalData, timestamp: e.target.value})}
+                                            className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pilih Kelas</label>
+                                        <select 
+                                            value={journalData.className}
+                                            onChange={(e) => setJournalData({...journalData, className: e.target.value})}
+                                            className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        >
+                                            {uniqueClasses.map(cls => (
+                                                <option key={cls} value={cls}>{cls}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Row 2: Mapel & Jam */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mata Pelajaran</label>
+                                        <input 
+                                            type="text" 
+                                            value={journalData.subject}
+                                            onChange={(e) => setJournalData({...journalData, subject: e.target.value})}
+                                            className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            placeholder="Contoh: Matematika Wajib"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jam Mengajar</label>
+                                        <input 
+                                            type="text" 
+                                            value={journalData.hours}
+                                            onChange={(e) => setJournalData({...journalData, hours: e.target.value})}
+                                            className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                            placeholder="Contoh: 1-2 (07.00 - 08.30)"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Materi */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Topik / Materi</label>
+                                    <input 
+                                        type="text" 
+                                        value={journalData.topic}
+                                        onChange={(e) => setJournalData({...journalData, topic: e.target.value})}
+                                        className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="Contoh: Logaritma"
+                                    />
+                                </div>
+
+                                {/* Kegiatan */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Kegiatan Pembelajaran</label>
+                                    <textarea 
+                                        rows={3}
+                                        value={journalData.activities}
+                                        onChange={(e) => setJournalData({...journalData, activities: e.target.value})}
+                                        className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="Deskripsikan kegiatan (Diskusi, Ceramah, Quiz...)"
+                                    ></textarea>
+                                </div>
+
+                                {/* Refleksi */}
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Catatan Kejadian / Refleksi</label>
+                                    <textarea 
+                                        rows={3}
+                                        value={journalData.reflections}
+                                        onChange={(e) => setJournalData({...journalData, reflections: e.target.value})}
+                                        className="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder="Catat kendala siswa, kejadian khusus..."
+                                    ></textarea>
+                                </div>
+
+                                <div className="flex gap-2 overflow-x-auto pb-2">
+                                    <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap"><Calculator size={16} /> Insert Formula</button>
+                                    <button className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors whitespace-nowrap"><CheckSquare size={16} /> Quiz Generator</button>
+                                </div>
+                                <button className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"><Save size={18} /> Simpan Jurnal</button>
+                            </div>
+                        </Card>
+                    </div>
+                );
+            };
 
             const MaterialView = () => (
                 <div className="space-y-6 animate-fade-in">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">Capaian Pembelajaran (CP)</h2>
-                        <button className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                            <Search size={18} className="text-slate-600 dark:text-slate-300" />
-                        </button>
-                    </div>
-
+                    <div className="flex justify-between items-center"><h2 className="text-xl font-bold text-slate-800 dark:text-white">Capaian Pembelajaran (CP)</h2><button className="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg"><Search size={18} className="text-slate-600 dark:text-slate-300" /></button></div>
                     <div className="grid gap-4">
                         {MOCK_MATERIALS.map((mat) => (
                             <Card key={mat.id} className="group cursor-pointer hover:border-blue-500 dark:hover:border-blue-500">
-                                <div className="flex justify-between items-start mb-2">
-                                    <Badge type={mat.status === 'Selesai' ? 'success' : mat.status === 'Berjalan' ? 'primary' : 'warning'}>
-                                        {mat.status}
-                                    </Badge>
-                                    <span className="text-xs font-bold text-slate-400">{mat.class}</span>
-                                </div>
+                                <div className="flex justify-between items-start mb-2"><Badge type={mat.status === 'Selesai' ? 'success' : mat.status === 'Berjalan' ? 'primary' : 'warning'}>{mat.status}</Badge><span className="text-xs font-bold text-slate-400">{mat.class}</span></div>
                                 <h3 className="text-lg font-bold text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">{mat.title}</h3>
-                                
-                                {/* Progress Bar */}
-                                <div className="mt-4">
-                                    <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                        <span>Progress</span>
-                                        <span>{mat.progress}%</span>
-                                    </div>
-                                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                                        <div 
-                                            className="bg-blue-500 h-full rounded-full transition-all duration-1000" 
-                                            style={{ width: `${mat.progress}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
+                                <div className="mt-4"><div className="flex justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span>{mat.progress}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden"><div className="bg-blue-500 h-full rounded-full transition-all duration-1000" style={{ width: `${mat.progress}%` }}></div></div></div>
                             </Card>
                         ))}
                     </div>
                 </div>
             );
 
-            // --- Layout Wrappers ---
-
+            // --- Layout ---
             const SidebarItem = ({ id, label, icon: Icon }) => (
-                <button
-                    onClick={() => setActiveTab(id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium
-                        ${activeTab === id 
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' 
-                            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                        }
-                    `}
-                >
-                    <Icon size={20} />
-                    <span>{label}</span>
-                </button>
+                <button onClick={() => setActiveTab(id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${activeTab === id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'}`}><Icon size={20} /><span>{label}</span></button>
             );
-
             const BottomNavItem = ({ id, label, icon: Icon }) => (
-                <button 
-                    onClick={() => setActiveTab(id)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors
-                        ${activeTab === id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}
-                    `}
-                >
-                    <Icon size={24} className={activeTab === id ? 'fill-current opacity-20' : ''} strokeWidth={activeTab === id ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium mt-1">{label}</span>
-                </button>
+                <button onClick={() => setActiveTab(id)} className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${activeTab === id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}><Icon size={24} className={activeTab === id ? 'fill-current opacity-20' : ''} strokeWidth={activeTab === id ? 2.5 : 2} /><span className="text-[10px] font-medium mt-1">{label}</span></button>
             );
 
             return (
                 <div className={`min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300 font-sans ${isDarkMode ? 'dark' : ''}`}>
-                    
-                    {/* Desktop Sidebar */}
                     <aside className="hidden md:flex flex-col w-72 h-screen fixed left-0 top-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 z-50">
-                        <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-700">
-                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-600/20">
-                                F
-                            </div>
-                            <div>
-                                <h1 className="font-bold text-slate-800 dark:text-white leading-tight">Pak Feri</h1>
-                                <p className="text-xs text-slate-500">Guru Matematika</p>
-                            </div>
-                        </div>
-
-                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
-                            <SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} />
-                            <SidebarItem id="schedule" label="Jadwal Mengajar" icon={Calendar} />
-                            <SidebarItem id="attendance" label="Absensi & Sikap" icon={UserCheck} />
-                            <SidebarItem id="journal" label="Jurnal Mengajar" icon={BookOpen} />
-                            <SidebarItem id="materials" label="Materi & CP" icon={GraduationCap} />
-                        </nav>
-
-                        <div className="p-4 border-t border-slate-100 dark:border-slate-700">
-                            <button 
-                                onClick={() => setIsDarkMode(!isDarkMode)}
-                                className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                            >
-                                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-                                <span className="text-sm font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-                            </button>
-                        </div>
+                        <div className="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-700"><div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-600/20">F</div><div><h1 className="font-bold text-slate-800 dark:text-white leading-tight">Pak Feri</h1><p className="text-xs text-slate-500">Guru Matematika</p></div></div>
+                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar"><SidebarItem id="dashboard" label="Dashboard" icon={LayoutDashboard} /><SidebarItem id="schedule" label="Jadwal Mengajar" icon={Calendar} /><SidebarItem id="attendance" label="Absensi & Sikap" icon={UserCheck} /><SidebarItem id="journal" label="Jurnal Mengajar" icon={BookOpen} /><SidebarItem id="materials" label="Materi & CP" icon={GraduationCap} /></nav>
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-700"><button onClick={() => setIsDarkMode(!isDarkMode)} className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">{isDarkMode ? <Sun size={18} /> : <Moon size={18} />}<span className="text-sm font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span></button></div>
                     </aside>
-
-                    {/* Main Content Area */}
                     <main className="md:ml-72 min-h-screen pb-24 md:pb-8">
-                        
-                        {/* Mobile Header */}
-                        <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold shadow-sm">F</div>
-                                <span className="font-bold text-slate-800 dark:text-white">MathTeacher</span>
-                            </div>
-                            <button 
-                                onClick={() => setIsDarkMode(!isDarkMode)}
-                                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                            >
-                                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                            </button>
-                        </header>
-
-                        {/* Content Container */}
+                        <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center"><div className="flex items-center gap-2"><div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold shadow-sm">F</div><span className="font-bold text-slate-800 dark:text-white">MathTeacher</span></div><button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{isDarkMode ? <Sun size={20} /> : <Moon size={20} />}</button></header>
                         <div className="p-4 md:p-8 max-w-5xl mx-auto">
                             {activeTab === 'dashboard' && <DashboardView />}
                             {activeTab === 'schedule' && <ScheduleView />}
@@ -561,26 +764,9 @@
                             {activeTab === 'journal' && <JournalView />}
                             {activeTab === 'materials' && <MaterialView />}
                         </div>
-
                     </main>
-
-                    {/* Mobile Bottom Navigation */}
                     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 px-6 py-2 pb-safe z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                        <BottomNavItem id="dashboard" label="Home" icon={LayoutDashboard} />
-                        <BottomNavItem id="schedule" label="Jadwal" icon={Calendar} />
-                        
-                        {/* Floating Action Button (FAB) Replacement for center item */}
-                        <div className="relative -top-6">
-                            <button 
-                                onClick={() => setActiveTab('attendance')}
-                                className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 hover:scale-105 transition-transform"
-                            >
-                                <Plus size={28} />
-                            </button>
-                        </div>
-
-                        <BottomNavItem id="journal" label="Jurnal" icon={BookOpen} />
-                        <BottomNavItem id="materials" label="Materi" icon={GraduationCap} />
+                        <BottomNavItem id="dashboard" label="Home" icon={LayoutDashboard} /><BottomNavItem id="schedule" label="Jadwal" icon={Calendar} /><div className="relative -top-6"><button onClick={() => setActiveTab('attendance')} className="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/40 hover:scale-105 transition-transform"><Plus size={28} /></button></div><BottomNavItem id="journal" label="Jurnal" icon={BookOpen} /><BottomNavItem id="materials" label="Materi" icon={GraduationCap} />
                     </nav>
                 </div>
             );
